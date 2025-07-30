@@ -77,7 +77,7 @@ def stop_sell(symbol, qty, stop_price):
     result = submit_order(symbol, qty, 'sell', 'stop', stop_price=stop_price)
     click.echo(result)
 
-    save_order_if_valid(result, 'sell', fallback_price=limit_price)
+    save_order_if_valid(result, 'sell', fallback_price=stop_price)
 
 @cli.command()
 def positions():

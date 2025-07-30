@@ -17,13 +17,14 @@ def get_finnhub_bars(symbol, resolution=60, count=24):
     Get recent OHLCV bars (default: last 96 x 15min bars = 24 hours).
     Returns a DataFrame with timestamp index and open/high/low/close/volume.
     """
-    end = int((datetime.now()  - timedelta(minutes=60)).timestamp())
+    # Finnhub's API requires UNIX timestamps for the start and end range.
+    # We request `count` bars ending at the current time minus one hour to
+    # avoid incomplete data for the most recent candle.
+    end = int((datetime.now() - timedelta(minutes=60)).timestamp())
     start = end - (int(resolution) * 60 * count)
-    resolution = "D"
-    start = "1738655051"
-    end = "1738741451"
+
     url = (
-        f"https://finnhub.io/api/v1/stock/candle"
+        "https://finnhub.io/api/v1/stock/candle"
         f"?symbol={symbol}&resolution={resolution}&from={start}&to={end}&token={FINNHUB_API_KEY}"
     )
 
