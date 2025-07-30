@@ -1,0 +1,16 @@
+click==8.2.1
+alpaca-trade-api==3.2.0
+requests
+python-dotenv==1.1.1
+sqlalchemy==2.0.42
+pymysql==1.1.1
+pandas==2.3.1
+pandas_ta==0.3.14b0
+cryptography==45.0.5
+numpy==1.24.4
+xgboost
+scikit-learn
+joblib
+
+
+

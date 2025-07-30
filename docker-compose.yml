@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: trading-bot
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+    entrypoint: bash
+    stdin_open: true
+    tty: true
+
+  mysql:
+    image: mysql:8.0
+    container_name: trading-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: trading
+      MYSQL_USER: trading_user
+      MYSQL_PASSWORD: trading_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
