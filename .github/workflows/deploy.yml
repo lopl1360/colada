@@ -28,4 +28,3 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
             cd /home/${{ secrets.DO_USER }}/app
-            docker-compose up --build -d
