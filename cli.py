@@ -134,5 +134,13 @@ def predict_symbol(symbol):
     predict(symbol.upper())
 
 
+@cli.command()
+def run_scheduler():
+    """Run scheduled tasks defined in trading_app.tasks."""
+    from trading_app.scheduler import run
+    click.echo("Starting scheduler... Press Ctrl+C to exit.")
+    run()
+
+
 if __name__ == '__main__':
     cli()

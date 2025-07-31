@@ -11,6 +11,4 @@ numpy==1.24.4
 xgboost
 scikit-learn
 joblib
-
-
-
+schedule>=1.2.0
