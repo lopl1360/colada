@@ -5,6 +5,16 @@ from .config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
 
 alpaca = REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
 
+
+def is_market_open() -> bool:
+    """Return True if the market is currently open."""
+    try:
+        clock = alpaca.get_clock()
+        return bool(getattr(clock, "is_open", False))
+    except Exception as e:
+        print(f"[Alpaca Error] {e}")
+        return False
+
 def get_latest_price(symbol):
     barset = alpaca.get_bars(symbol, TimeFrame.Minute, limit=1)
     return barset[-1].c if barset else None
@@ -14,6 +24,8 @@ def submit_market_order(symbol, qty, side):
     Places a market order to buy or sell a given symbol.
     side: 'buy' or 'sell'
     """
+    if not is_market_open():
+        return {"error": "Market is closed"}
     try:
         order = alpaca.submit_order(
             symbol=symbol,
@@ -36,6 +48,8 @@ def submit_order(symbol, qty, side, order_type='market', limit_price=None, stop_
     :param limit_price: used for 'limit' orders
     :param stop_price: used for 'stop' orders
     """
+    if not is_market_open():
+        return {"error": "Market is closed"}
     try:
         order = alpaca.submit_order(
             symbol=symbol,
