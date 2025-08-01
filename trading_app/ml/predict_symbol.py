@@ -4,6 +4,7 @@ from joblib import load
 from datetime import datetime
 from trading_app.finnhub_client import get_finnhub_bars
 import pandas_ta as ta
+from trading_app.indicators import TACalculator
 
 def load_model(symbol):
     model_path = f"models/model_{symbol}.pkl"
@@ -18,10 +19,11 @@ def prepare_latest_features(symbol):
         print(f"No data for {symbol}")
         return None
 
+    df = TACalculator.add_indicators(df)
     df["return"] = df["close"].pct_change()
     df["ma5"] = df["close"].rolling(5).mean()
     df["ma20"] = df["close"].rolling(20).mean()
-    df["rsi"] = ta.rsi(df["close"], length=14)
+    df["rsi"] = df["rsi_14"]
 
     df = df.dropna()
     if df.empty:
