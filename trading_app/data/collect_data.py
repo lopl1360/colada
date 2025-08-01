@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from trading_app.alpaca_client import get_historical_data
+from trading_app.indicators import TACalculator
 
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 OUTPUT_DIR = "data"
@@ -26,6 +27,9 @@ def fetch_data(symbol):
         "close": "last",
         "volume": "sum"
     }).dropna()
+
+    # Add common technical indicators
+    df_15 = TACalculator.add_indicators(df_15)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     df_15.to_csv(f"{OUTPUT_DIR}/{symbol}_15min.csv")

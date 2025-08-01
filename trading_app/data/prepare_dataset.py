@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import pandas_ta as ta
+from trading_app.indicators import TACalculator
 
 INPUT_DIR = "data"
 OUTPUT_DIR = "features"
@@ -15,10 +16,11 @@ def prepare_features(symbol):
     df = pd.read_csv(path, index_col=0, parse_dates=True)
 
     # Add technical indicators
+    df = TACalculator.add_indicators(df)
     df["return"] = df["close"].pct_change()
     df["ma5"] = df["close"].rolling(5).mean()
     df["ma20"] = df["close"].rolling(20).mean()
-    df["rsi"] = ta.rsi(df["close"], length=14)
+    df["rsi"] = df["rsi_14"]
 
     # Drop rows with NaN
     df = df.dropna()
