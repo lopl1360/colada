@@ -39,8 +39,12 @@ def buy(symbol, qty):
     """Place a market buy order."""
     from trading_app.alpaca_client import submit_market_order
     result = submit_market_order(symbol, qty, 'buy')
-    click.echo(result)
 
+    if isinstance(result, dict) and 'error' in result:
+        click.echo(f"Error: {result['error']}")
+        return
+
+    click.echo(result)
     save_order_if_valid(result, 'buy')
 
 
@@ -51,8 +55,12 @@ def sell(symbol, qty):
     """Place a market sell order."""
     from trading_app.alpaca_client import submit_market_order
     result = submit_market_order(symbol, qty, 'sell')
-    click.echo(result)
 
+    if isinstance(result, dict) and 'error' in result:
+        click.echo(f"Error: {result['error']}")
+        return
+
+    click.echo(result)
     save_order_if_valid(result, 'sell')
 
 @cli.command()
@@ -63,8 +71,12 @@ def limit_buy(symbol, qty, limit_price):
     """Place a limit buy order."""
     from trading_app.alpaca_client import submit_order
     result = submit_order(symbol, qty, 'buy', 'limit', limit_price=limit_price)
-    click.echo(result)
 
+    if isinstance(result, dict) and 'error' in result:
+        click.echo(f"Error: {result['error']}")
+        return
+
+    click.echo(result)
     save_order_if_valid(result, 'buy', fallback_price=limit_price)
 
 
@@ -76,8 +88,12 @@ def stop_sell(symbol, qty, stop_price):
     """Place a stop-loss sell order."""
     from trading_app.alpaca_client import submit_order
     result = submit_order(symbol, qty, 'sell', 'stop', stop_price=stop_price)
-    click.echo(result)
 
+    if isinstance(result, dict) and 'error' in result:
+        click.echo(f"Error: {result['error']}")
+        return
+
+    click.echo(result)
     save_order_if_valid(result, 'sell', fallback_price=stop_price)
 
 @cli.command()
@@ -108,6 +124,15 @@ def balance():
         click.echo(f"Buying Power:    ${summary['buying_power']}")
         click.echo(f"Portfolio Value: ${summary['portfolio_value']}")
         click.echo(f"Account Status:  {summary['status']}")
+
+
+@cli.command()
+def market_status():
+    """Show whether the market is currently open."""
+    from trading_app.alpaca_client import is_market_open
+
+    status = "open" if is_market_open() else "closed"
+    click.echo(f"Market is currently {status}.")
 
 @cli.command()
 def collect_data():
