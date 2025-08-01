@@ -1,0 +1,9 @@
+nginx
+transformers
+torch
+yfinance
+pandas
+numpy
+alpaca-trade-api
+scikit-learn
+pandas-ta
