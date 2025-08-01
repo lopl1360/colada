@@ -12,3 +12,4 @@ xgboost
 scikit-learn
 joblib
 schedule>=1.2.0
+torch
