@@ -1,4 +1,6 @@
 from alpaca_trade_api.rest import REST, TimeFrame
+from alpaca_trade_api.stream import Stream
+import asyncio
 from .config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
 
 alpaca = REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
@@ -87,3 +89,29 @@ def get_historical_data(symbol, start, end, timeframe=TimeFrame.Minute):
     except Exception as e:
         print(f"[Alpaca Error] {e}")
         return None
+
+
+def stream_live_data(symbol, data_type="trades"):
+    """Subscribe to live Alpaca data for a symbol using WebSockets."""
+
+    async def _run():
+        stream = Stream(
+            ALPACA_API_KEY,
+            ALPACA_SECRET_KEY,
+            base_url=ALPACA_BASE_URL,
+            data_feed="iex",
+        )
+
+        if data_type == "trades":
+            stream.subscribe_trades(handler, symbol)
+        elif data_type == "quotes":
+            stream.subscribe_quotes(handler, symbol)
+        else:
+            stream.subscribe_bars(handler, symbol)
+
+        await stream._run_forever()
+
+    def handler(data):
+        print(data)
+
+    asyncio.run(_run())

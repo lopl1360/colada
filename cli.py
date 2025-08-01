@@ -3,6 +3,7 @@ from trading_app.alpaca_client import get_latest_price
 from trading_app.finnhub_client import get_finnhub_quote
 from trading_app import init_app
 from trading_app.helpers import save_order_if_valid
+from trading_app.alpaca_client import stream_live_data
 
 init_app()
 
@@ -132,6 +133,13 @@ def predict_symbol(symbol):
     """Predict if the given symbol will go UP or DOWN using the latest model."""
     from trading_app.ml.predict_symbol import predict_symbol as predict
     predict(symbol.upper())
+
+
+@cli.command()
+@click.argument('symbol')
+def stream(symbol):
+    """Print live trade updates for the given symbol."""
+    stream_live_data(symbol)
 
 
 @cli.command()
