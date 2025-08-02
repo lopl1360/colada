@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import pandas_ta as ta
 from trading_app.indicators import TACalculator
 
 INPUT_DIR = "data"
@@ -21,9 +20,10 @@ def prepare_features(symbol):
     df["ma5"] = df["close"].rolling(5).mean()
     df["ma20"] = df["close"].rolling(20).mean()
     df["rsi"] = df["rsi_14"]
+    df.drop(columns=["rsi_14"], inplace=True)
 
     # Drop rows with NaN
-    df = df.dropna()
+    df.dropna(inplace=True)
 
     # Create target: 1 if next close is higher than current close
     df["target"] = (df["close"].shift(-1) > df["close"]).astype(int)

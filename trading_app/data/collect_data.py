@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import os
-import pandas as pd
 from trading_app.alpaca_client import get_historical_data
 from trading_app.indicators import TACalculator
 
@@ -8,8 +7,10 @@ SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 OUTPUT_DIR = "data"
 DAYS = 30
 
+
 def fetch_data(symbol):
-    start = (datetime.now() - timedelta(days=31)).strftime("%Y-%m-%d")
+    """Download recent data for ``symbol`` and store a 15-minute file."""
+    start = (datetime.now() - timedelta(days=DAYS + 1)).strftime("%Y-%m-%d")
     end = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     print(f"Getting data for {symbol} from: {start} and {end}")
