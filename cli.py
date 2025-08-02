@@ -146,6 +146,18 @@ def prepare_dataset():
     from trading_app.data.prepare_dataset import prepare_all
     prepare_all()
 
+
+@cli.command()
+@click.argument('symbol')
+@click.option('--window', default=60, help='Rolling window size')
+@click.option('--output', default='sentiment_dataset.csv', help='Output CSV path')
+def sentiment_dataset(symbol, window, output):
+    """Create sentiment-augmented dataset for `symbol`."""
+    from trading_app.data.create_sentiment_dataset import build_dataset
+
+    df = build_dataset(symbol.upper(), window=window, output_csv=output)
+    click.echo(f"Saved {len(df)} rows to {output}")
+
 @cli.command()
 def train_model():
     """Train XGBoost models for all available symbols."""
