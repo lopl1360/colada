@@ -35,7 +35,7 @@ def fetch_news_sentiment(symbol: str) -> pd.Series:
     analyzer = SentimentAnalyzer()
     rows = []
     for item in news_items:
-        ts = item.get("providerPublishTime") or item.get("providerPublishTime")
+        ts = item.get("providerPublishTime") or item.get("publishTime")
         if ts is None:
             continue
         ts = pd.to_datetime(ts, unit="s")
