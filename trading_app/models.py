@@ -18,10 +18,14 @@ class Order(Base):
     submitted_at = Column(DateTime, default=datetime.utcnow)
 
     def save(self):
-        session = SessionLocal()
-        session.add(self)
-        session.commit()
-        session.close()
+        """Persist the order to the database safely."""
+        with SessionLocal() as session:
+            try:
+                session.add(self)
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
 
 # DB connection
 if all(
