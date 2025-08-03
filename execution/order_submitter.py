@@ -5,6 +5,8 @@ import os
 
 from alpaca_trade_api.rest import REST
 
+from . import position_manager
+
 logger = logging.getLogger(__name__)
 
 # Acquire credentials from environment variables, falling back to dummy strings to
@@ -34,6 +36,10 @@ def submit_bracket_order(symbol, qty, side, entry_price, stop_pct, target_pct):
     Raises:
         Exception: Propagates any exception from the Alpaca API.
     """
+    if position_manager.get_open_position(symbol):
+        logger.info("Existing position for %s; skipping order", symbol)
+        return None
+
     stop_price = entry_price * (1 - stop_pct) if side == "buy" else entry_price * (1 + stop_pct)
     target_price = entry_price * (1 + target_pct) if side == "buy" else entry_price * (1 - target_pct)
 
