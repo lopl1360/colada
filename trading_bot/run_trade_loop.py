@@ -28,17 +28,30 @@ except Exception:  # pragma: no cover - handled gracefully in runtime
     torch = None  # type: ignore
 
 from monitoring.logger import setup_logger
+from execution import order_submitter, position_manager, position_sizer, volatility_manager
 from llm_model.sentiment_analyzer import SentimentAnalyzer
 from models.lstm_price_predictor import LSTMPricePredictor
 from utils.feature_engineering import add_technical_indicators, merge_sentiment_features
 from execution.market_timer import should_exit_positions
-from trading_app.alpaca_client import alpaca as alpaca_api
+try:  # pragma: no cover - handle environments without trading_app setup
+    from trading_app.alpaca_client import alpaca as alpaca_api
+except Exception:  # pragma: no cover - fall back to dummy client
+    alpaca_api = None  # type: ignore
 
 setup_logger()
 logger = logging.getLogger(__name__)
 
 
 FeatureVector = np.ndarray
+
+
+def _fetch_equity() -> float:
+    """Return account equity using the shared Alpaca client if available."""
+    try:  # pragma: no cover - requires network in real use
+        account = order_submitter.alpaca.get_account()
+        return float(getattr(account, "equity", 0.0))
+    except Exception:
+        return 0.0
 
 
 def _default_price_fetcher(symbol: str) -> float:
@@ -85,6 +98,7 @@ def run_trade_loop(
     news_fetcher: Optional[Callable[[str], str]] = None,
     sleep_seconds: float = 60.0,
     max_iterations: Optional[int] = None,
+    signal_threshold: float = 0.5,
 ) -> None:
     """Run the main trading loop.
 
@@ -125,7 +139,7 @@ def run_trade_loop(
     while max_iterations is None or iterations < max_iterations:
         iterations += 1
 
-        if should_exit_positions(alpaca_api):
+        if alpaca_api is not None and should_exit_positions(alpaca_api):
             try:
                 positions = alpaca_api.list_positions()
                 for pos in positions:
@@ -160,7 +174,7 @@ def run_trade_loop(
         # Build feature set with technical indicators and sentiment
         features_df = add_technical_indicators(price_history)
         features_df = merge_sentiment_features(features_df, sentiment_score)
-        latest = features_df.iloc[-1][
+        latest = features_df.iloc[-1].reindex(
             [
                 "close",
                 "rsi",
@@ -171,7 +185,7 @@ def run_trade_loop(
                 "volatility",
                 "sentiment",
             ]
-        ].fillna(0.0)
+        ).fillna(0.0)
 
         feature_vec = latest.to_numpy(dtype=np.float32)
         feature_window.append(feature_vec)
@@ -189,7 +203,7 @@ def run_trade_loop(
             x = torch.tensor([list(feature_window)], dtype=torch.float32)
             with torch.no_grad():
                 prediction = model(x).item()
-            action = _decide_action(prediction)
+            action = _decide_action(prediction, threshold=signal_threshold)
             confidence = abs(prediction)
             logger.info(
                 "%s price=%.2f pred=%.4f conf=%.4f sentiment=%.4f action=%s",
@@ -200,9 +214,36 @@ def run_trade_loop(
                 sentiment_score,
                 action,
             )
+            if (
+                action != "hold"
+                and confidence >= signal_threshold
+                and position_manager.get_open_position(symbol) is None
+            ):
+                try:
+                    stop_pct, target_pct = volatility_manager.compute_stop_target(
+                        price_history["close"]
+                    )
+                except Exception:  # pragma: no cover - rely on best effort
+                    stop_pct, target_pct = 0.0, 0.0
+                equity = _fetch_equity()
+                qty = position_sizer.calculate_position_size(equity, stop_pct, price)
+                side = "buy" if action == "long" else "sell"
+                if qty > 0:
+                    order_submitter.submit_bracket_order(
+                        symbol, qty, side, price, stop_pct, target_pct
+                    )
+                logger.info(
+                    "%s price=%.2f qty=%s signal=%.4f stop=%.4f target=%.4f",
+                    symbol,
+                    price,
+                    qty,
+                    prediction,
+                    stop_pct,
+                    target_pct,
+                )
         else:
             remaining = seq_len - len(feature_window)
-            logger.info("Collecting data... %s minutes remaining", remaining)
+            logger.info("Collecting data... %d minutes remaining", remaining)
 
         time.sleep(sleep_seconds)
 

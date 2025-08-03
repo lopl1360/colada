@@ -6,3 +6,4 @@ def setup_logger(log_path='trade.log'):
         level=logging.INFO,
         format='%(asctime)s %(levelname)s: %(message)s'
     )
+
