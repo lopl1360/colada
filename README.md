@@ -25,10 +25,26 @@ Colada is a Python-based trading toolkit that integrates real-time market data, 
    - `FINNHUB_API_KEY`
    - `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`
 3. Optionally start the MySQL database and bot via Docker:
-   ```bash
-   make build
-   make up
-   ```
+    ```bash
+    make build
+    make up
+    ```
+
+### DigitalOcean droplet preparation
+
+On a fresh droplet you can install Python 3.11, create the virtual environment and install project dependencies with:
+
+```bash
+make prepare
+```
+
+To run commands inside this environment use:
+
+```bash
+make venv CMD="python cli.py alpaca AAPL"
+```
+
+Replace the command passed to `CMD` to run any script; use `bash` to drop into an interactive shell.
 
 ## Usage
 Invoke commands through the CLI:
