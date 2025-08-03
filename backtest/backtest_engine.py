@@ -5,7 +5,7 @@ import pandas as pd
 from typing import Callable, Sequence
 
 from .trade_simulator import TradeSimulator
-from .metrics import calculate_metrics, plot_performance
+from .metrics import calculate_metrics, plot_performance, track_equity
 
 
 class BacktestEngine:
@@ -15,12 +15,14 @@ class BacktestEngine:
         self.data = data
         self.simulator = TradeSimulator(initial_cash=initial_cash)
         self.results: pd.DataFrame | None = None
-        self.metrics: pd.DataFrame | None = None
+        self.metrics: dict[str, float] | None = None
 
     def run(self, signals: pd.Series) -> pd.DataFrame:
         """Execute a backtest given trading signals."""
         self.results = self.simulator.simulate(self.data, signals)
-        self.metrics = calculate_metrics(self.results)
+        for ts, row in self.results.iterrows():
+            track_equity(ts, row["portfolio_value"])
+        self.metrics = calculate_metrics()
         return self.results
 
     def run_event_driven(
@@ -71,10 +73,12 @@ class BacktestEngine:
 
         # Execute the trades via the simulator and calculate metrics
         self.results = self.simulator.simulate(self.data, signal_series)
-        self.metrics = calculate_metrics(self.results)
+        for ts, row in self.results.iterrows():
+            track_equity(ts, row["portfolio_value"])
+        self.metrics = calculate_metrics()
         return self.results
 
     def plot(self) -> None:
         """Plot performance metrics if available."""
         if self.metrics is not None:
-            plot_performance(self.metrics)
+            plot_performance()
