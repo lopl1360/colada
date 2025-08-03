@@ -5,8 +5,9 @@ import os
 
 Base = declarative_base()
 
+
 class Order(Base):
-    __tablename__ = 'orders'
+    __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True)
     symbol = Column(String(10))
@@ -26,6 +27,7 @@ class Order(Base):
             except Exception:
                 session.rollback()
                 raise
+
 
 # DB connection
 if all(

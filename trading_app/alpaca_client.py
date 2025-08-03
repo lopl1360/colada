@@ -16,9 +16,11 @@ def is_market_open() -> bool:
         logger.error("Alpaca error: %s", e)
         return False
 
+
 def get_latest_price(symbol):
     barset = alpaca.get_bars(symbol, TimeFrame.Minute, limit=1)
     return barset[-1].c if barset else None
+
 
 def submit_market_order(symbol, qty, side):
     """
@@ -32,14 +34,17 @@ def submit_market_order(symbol, qty, side):
             symbol=symbol,
             qty=qty,
             side=side,
-            type='market',
-            time_in_force='gtc'  # good till canceled
+            type="market",
+            time_in_force="gtc",  # good till canceled
         )
         return order
     except Exception as e:
         return {"error": str(e)}
 
-def submit_order(symbol, qty, side, order_type='market', limit_price=None, stop_price=None):
+
+def submit_order(
+    symbol, qty, side, order_type="market", limit_price=None, stop_price=None
+):
     """
     Submit an order with flexible type.
     :param symbol: e.g. 'AAPL'
@@ -57,13 +62,14 @@ def submit_order(symbol, qty, side, order_type='market', limit_price=None, stop_
             qty=qty,
             side=side,
             type=order_type,
-            time_in_force='gtc',
+            time_in_force="gtc",
             limit_price=limit_price,
-            stop_price=stop_price
+            stop_price=stop_price,
         )
         return order
     except Exception as e:
         return {"error": str(e)}
+
 
 def get_positions():
     """
@@ -73,6 +79,7 @@ def get_positions():
         return alpaca.list_positions()
     except Exception as e:
         return {"error": str(e)}
+
 
 def get_account_summary():
     """
@@ -85,10 +92,11 @@ def get_account_summary():
             "cash": float(account.cash),
             "buying_power": float(account.buying_power),
             "portfolio_value": float(account.portfolio_value),
-            "status": account.status
+            "status": account.status,
         }
     except Exception as e:
         return {"error": str(e)}
+
 
 def get_historical_data(symbol, start, end, timeframe=TimeFrame.Minute):
     """
@@ -108,6 +116,7 @@ def get_historical_data(symbol, start, end, timeframe=TimeFrame.Minute):
 
 def stream_live_data(symbol, data_type="trades"):
     """Subscribe to live Alpaca data for a symbol using WebSockets."""
+
     def handler(data):
         logger.info("%s", data)
 

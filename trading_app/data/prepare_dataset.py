@@ -6,6 +6,7 @@ INPUT_DIR = "data"
 OUTPUT_DIR = "features"
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 
+
 def prepare_features(symbol):
     path = os.path.join(INPUT_DIR, f"{symbol}_15min.csv")
     if not os.path.exists(path):
@@ -36,9 +37,11 @@ def prepare_features(symbol):
     df.to_csv(out_path)
     print(f"[Saved] {symbol} → {out_path}")
 
+
 def prepare_all():
     for symbol in SYMBOLS:
         prepare_features(symbol)
+
 
 if __name__ == "__main__":
     prepare_all()

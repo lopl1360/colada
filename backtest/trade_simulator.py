@@ -1,4 +1,5 @@
 """Simple trade simulator with rudimentary execution costs."""
+
 from __future__ import annotations
 
 import random
@@ -88,7 +89,9 @@ class TradeSimulator:
 
         direction = "buy" if shares > 0 else "sell"
         executed_price = self.apply_slippage(entry_price, direction)
-        spread_amt = self.spread if self.spread_pct == 0 else executed_price * self.spread_pct
+        spread_amt = (
+            self.spread if self.spread_pct == 0 else executed_price * self.spread_pct
+        )
         if direction == "buy":
             executed_price += spread_amt / 2
         else:
@@ -156,7 +159,9 @@ class TradeSimulator:
 
         direction = "sell" if shares > 0 else "buy"
         executed_price = self.apply_slippage(exit_price, direction)
-        spread_amt = self.spread if self.spread_pct == 0 else executed_price * self.spread_pct
+        spread_amt = (
+            self.spread if self.spread_pct == 0 else executed_price * self.spread_pct
+        )
         if direction == "buy":
             executed_price += spread_amt / 2
         else:

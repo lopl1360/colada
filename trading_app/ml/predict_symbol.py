@@ -1,10 +1,8 @@
 import os
-import pandas as pd
 from joblib import load
-from datetime import datetime
 from trading_app.finnhub_client import get_finnhub_bars
-import pandas_ta as ta
 from trading_app.indicators import TACalculator
+
 
 def load_model(symbol):
     model_path = f"models/model_{symbol}.pkl"
@@ -12,6 +10,7 @@ def load_model(symbol):
         print(f"Model for {symbol} not found.")
         return None
     return load(model_path)
+
 
 def prepare_latest_features(symbol):
     df = get_finnhub_bars(symbol)
@@ -33,6 +32,7 @@ def prepare_latest_features(symbol):
     latest_row = df.iloc[-1]
     return latest_row[["return", "ma5", "ma20", "rsi"]].values.reshape(1, -1)
 
+
 def predict_symbol(symbol):
     model = load_model(symbol)
     if not model:
@@ -44,4 +44,6 @@ def predict_symbol(symbol):
 
     prediction = model.predict(features)[0]
     prob = model.predict_proba(features)[0][1]
-    print(f"Prediction for {symbol}: {'UP' if prediction == 1 else 'DOWN'} (Confidence: {prob:.2f})")
+    print(
+        f"Prediction for {symbol}: {'UP' if prediction == 1 else 'DOWN'} (Confidence: {prob:.2f})"
+    )

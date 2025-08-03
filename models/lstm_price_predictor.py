@@ -1,4 +1,3 @@
-import os
 from typing import List, Optional
 
 import numpy as np
@@ -18,9 +17,15 @@ except ImportError:  # pragma: no cover - torch may not be installed
 class LSTMPricePredictor(nn.Module):
     """Simple LSTM network for price prediction."""
 
-    def __init__(self, input_dim: int, hidden_dim: int = 64,
-                 num_layers: int = 2, output_dim: int = 1,
-                 bidirectional: bool = False, dropout: float = 0.0):
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dim: int = 64,
+        num_layers: int = 2,
+        output_dim: int = 1,
+        bidirectional: bool = False,
+        dropout: float = 0.0,
+    ):
         super().__init__()
         if torch is None:
             raise ImportError("PyTorch is required to use LSTMPricePredictor")
@@ -43,9 +48,13 @@ class LSTMPricePredictor(nn.Module):
 class PriceSentimentDataset(Dataset):
     """Dataset that creates sequences from price and sentiment features."""
 
-    def __init__(self, csv_path: str, seq_len: int = 60,
-                 target_col: str = "target",
-                 feature_cols: Optional[List[str]] = None):
+    def __init__(
+        self,
+        csv_path: str,
+        seq_len: int = 60,
+        target_col: str = "target",
+        feature_cols: Optional[List[str]] = None,
+    ):
         if torch is None:
             raise ImportError("PyTorch is required to use PriceSentimentDataset")
         df = pd.read_csv(csv_path)
@@ -58,7 +67,7 @@ class PriceSentimentDataset(Dataset):
         sequences = []
         targets = []
         for i in range(len(df) - seq_len):
-            sequences.append(data[i:i + seq_len])
+            sequences.append(data[i : i + seq_len])
             targets.append(target[i + seq_len])
         self.X = np.stack(sequences)
         self.y = np.array(targets)
@@ -70,11 +79,17 @@ class PriceSentimentDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 
-def train_lstm(csv_path: str, seq_len: int = 60, batch_size: int = 32,
-               num_epochs: int = 10, lr: float = 1e-3,
-               target_col: str = "target", feature_cols: Optional[List[str]] = None,
-               classification: bool = False,
-               model_path: str = "lstm_model.pt"):
+def train_lstm(
+    csv_path: str,
+    seq_len: int = 60,
+    batch_size: int = 32,
+    num_epochs: int = 10,
+    lr: float = 1e-3,
+    target_col: str = "target",
+    feature_cols: Optional[List[str]] = None,
+    classification: bool = False,
+    model_path: str = "lstm_model.pt",
+):
     """Train the LSTM model using a CSV with price and sentiment features."""
     if torch is None:
         raise ImportError("PyTorch is required to train the LSTM model")

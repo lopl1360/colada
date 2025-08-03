@@ -35,13 +35,15 @@ def get_finnhub_bars(symbol, resolution=60, count=24):
         print(f"[Finnhub Error] {data}")
         return None
 
-    df = pd.DataFrame({
-        "timestamp": pd.to_datetime(data["t"], unit="s"),
-        "open": data["o"],
-        "high": data["h"],
-        "low": data["l"],
-        "close": data["c"],
-        "volume": data["v"]
-    }).set_index("timestamp")
+    df = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(data["t"], unit="s"),
+            "open": data["o"],
+            "high": data["h"],
+            "low": data["l"],
+            "close": data["c"],
+            "volume": data["v"],
+        }
+    ).set_index("timestamp")
 
     return df

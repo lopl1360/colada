@@ -121,4 +121,3 @@ __all__ = [
     "plot_performance",
     "equity_curve_dataframe",
 ]
-

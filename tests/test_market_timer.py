@@ -33,4 +33,3 @@ def test_should_exit_positions():
     clock_near = DummyClock(now, now + timedelta(minutes=2))
     api_near = DummyApi(clock_near)
     assert market_timer.should_exit_positions(api_near) is True
-

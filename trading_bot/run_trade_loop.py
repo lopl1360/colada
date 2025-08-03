@@ -30,7 +30,12 @@ try:  # pragma: no cover - torch may not be installed in some environments
 except Exception:  # pragma: no cover - handled gracefully in runtime
     torch = None  # type: ignore
 
-from execution import order_submitter, position_manager, position_sizer, volatility_manager
+from execution import (
+    order_submitter,
+    position_manager,
+    position_sizer,
+    volatility_manager,
+)
 
 from llm_model.sentiment_analyzer import SentimentAnalyzer
 from models.lstm_price_predictor import LSTMPricePredictor
@@ -173,18 +178,22 @@ def run_trade_loop(
         # Build feature set with technical indicators and sentiment
         features_df = add_technical_indicators(price_history)
         features_df = merge_sentiment_features(features_df, sentiment_score)
-        latest = features_df.iloc[-1].reindex(
-            [
-                "close",
-                "rsi",
-                "macd",
-                "macd_signal",
-                "macd_hist",
-                "sma_20",
-                "volatility",
-                "sentiment",
-            ]
-        ).fillna(0.0)
+        latest = (
+            features_df.iloc[-1]
+            .reindex(
+                [
+                    "close",
+                    "rsi",
+                    "macd",
+                    "macd_signal",
+                    "macd_hist",
+                    "sma_20",
+                    "volatility",
+                    "sentiment",
+                ]
+            )
+            .fillna(0.0)
+        )
 
         feature_vec = latest.to_numpy(dtype=np.float32)
         feature_window.append(feature_vec)
