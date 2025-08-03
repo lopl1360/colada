@@ -13,10 +13,11 @@ tests can supply deterministic stubs instead of performing real network calls.
 
 from __future__ import annotations
 
+import logging
 import time
 from collections import deque
 from pathlib import Path
-from typing import Callable, Deque, Iterable, Optional
+from typing import Callable, Deque, Optional
 
 import numpy as np
 import pandas as pd
@@ -26,11 +27,15 @@ try:  # pragma: no cover - torch may not be installed in some environments
 except Exception:  # pragma: no cover - handled gracefully in runtime
     torch = None  # type: ignore
 
+from monitoring.logger import setup_logger
 from llm_model.sentiment_analyzer import SentimentAnalyzer
 from models.lstm_price_predictor import LSTMPricePredictor
 from utils.feature_engineering import add_technical_indicators, merge_sentiment_features
 from execution.market_timer import should_exit_positions
 from trading_app.alpaca_client import alpaca as alpaca_api
+
+setup_logger()
+logger = logging.getLogger(__name__)
 
 
 FeatureVector = np.ndarray
@@ -43,8 +48,9 @@ def _default_price_fetcher(symbol: str) -> float:
 
         price = get_latest_price(symbol)
         return float(price) if price is not None else float("nan")
-    except Exception:
+    except Exception as exc:
         # In offline environments or if Alpaca is not configured, fall back to NaN
+        logger.error("Price fetch failed for %s: %s", symbol, exc)
         return float("nan")
 
 
@@ -57,8 +63,8 @@ def _default_news_fetcher(symbol: str) -> str:
         if news_items:
             item = news_items[0]
             return f"{item.get('title', '')} {item.get('summary', '')}".strip()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.error("News fetch failed for %s: %s", symbol, exc)
     return ""  # no news available
 
 
@@ -120,15 +126,36 @@ def run_trade_loop(
         iterations += 1
 
         if should_exit_positions(alpaca_api):
-            alpaca_api.close_all_positions()
+            try:
+                positions = alpaca_api.list_positions()
+                for pos in positions:
+                    logger.info(
+                        "Closing %s qty=%s PnL=%s", pos.symbol, pos.qty, pos.unrealized_pl
+                    )
+            except Exception as exc:  # pragma: no cover - depends on API
+                logger.error("Failed to fetch positions before closing: %s", exc)
+            try:
+                alpaca_api.close_all_positions()
+                logger.info("All positions closed")
+            except Exception as exc:  # pragma: no cover - depends on API
+                logger.error("Failed to close positions: %s", exc)
             break
 
-        price = float(price_fetcher(symbol))
-        news_text = news_fetcher(symbol)
+        try:
+            price = float(price_fetcher(symbol))
+        except Exception as exc:
+            logger.error("Error fetching price for %s: %s", symbol, exc)
+            price = float("nan")
+        try:
+            news_text = news_fetcher(symbol)
+        except Exception as exc:
+            logger.error("Error fetching news for %s: %s", symbol, exc)
+            news_text = ""
         sentiment_score = float(sentiment_model.get_sentiment_score(news_text))
 
-        # Update price history
-        price_history.loc[pd.Timestamp.utcnow(), "close"] = price
+        timestamp = pd.Timestamp.utcnow()
+        price_history.loc[timestamp, "close"] = price
+        logger.info("New bar %s price=%.2f", timestamp.isoformat(), price)
 
         # Build feature set with technical indicators and sentiment
         features_df = add_technical_indicators(price_history)
@@ -163,10 +190,19 @@ def run_trade_loop(
             with torch.no_grad():
                 prediction = model(x).item()
             action = _decide_action(prediction)
-            print(f"{symbol} price={price:.2f} pred={prediction:.4f} -> {action}")
+            confidence = abs(prediction)
+            logger.info(
+                "%s price=%.2f pred=%.4f conf=%.4f sentiment=%.4f action=%s",
+                symbol,
+                price,
+                prediction,
+                confidence,
+                sentiment_score,
+                action,
+            )
         else:
             remaining = seq_len - len(feature_window)
-            print(f"Collecting data... {remaining} minutes remaining")
+            logger.info("Collecting data... %s minutes remaining", remaining)
 
         time.sleep(sleep_seconds)
 

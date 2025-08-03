@@ -54,7 +54,9 @@ def submit_bracket_order(symbol, qty, side, entry_price, stop_pct, target_pct):
             stop_loss={"stop_price": stop_price},
             take_profit={"limit_price": target_price},
         )
-        logger.info("Bracket order submitted: %s", order)
+        logger.info(
+            "Order submitted: symbol=%s qty=%s price=%.2f", symbol, qty, entry_price
+        )
         return order
     except Exception as exc:  # pragma: no cover - network errors or others
         logger.error("Failed to submit bracket order: %s", exc)
