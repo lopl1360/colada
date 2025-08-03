@@ -1,11 +1,19 @@
 """Core backtesting engine."""
 from __future__ import annotations
 
+import json
+from typing import Any, Callable, Sequence
+
 import pandas as pd
-from typing import Callable, Sequence
 
 from .trade_simulator import TradeSimulator
-from .metrics import calculate_metrics, plot_performance, track_equity
+from .metrics import (
+    _trade_log,
+    calculate_metrics,
+    plot_performance,
+    track_equity,
+    equity_curve_dataframe,
+)
 
 
 class BacktestEngine:
@@ -82,3 +90,83 @@ class BacktestEngine:
         """Plot performance metrics if available."""
         if self.metrics is not None:
             plot_performance()
+
+
+def run_backtest(
+    data: pd.DataFrame,
+    model: Any,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Run a backtest and output a summary report.
+
+    Parameters
+    ----------
+    data:
+        Price and feature data for the backtest.
+    model:
+        Object with a ``predict`` method or a callable returning numeric
+        predictions.  The sign of the prediction determines the trading
+        signal (positive -> buy, negative -> sell).
+    config:
+        Optional configuration dictionary.  Recognised keys include
+        ``initial_cash`` for the simulator, ``feature_cols`` to select
+        model input columns and ``export``/``export_format`` for saving
+        results to disk.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing the raw results, equity curve, trade log and
+        summary metrics.
+    """
+
+    if config is None:
+        config = {}
+
+    engine = BacktestEngine(data, initial_cash=config.get("initial_cash", 10_000.0))
+    feature_cols = config.get("feature_cols")
+
+    def predict_fn(features: pd.Series) -> float:
+        if hasattr(model, "predict"):
+            prediction = model.predict(features.to_frame().T)
+            if isinstance(prediction, (pd.Series, pd.DataFrame, list, tuple)):
+                prediction = prediction[0]
+        else:
+            prediction = model(features)
+        return float(prediction)
+
+    results = engine.run_event_driven(predict_fn, feature_cols=feature_cols)
+
+    equity = equity_curve_dataframe()
+    trade_log = pd.DataFrame(_trade_log)
+    summary = engine.metrics or calculate_metrics()
+
+    print("Equity Curve:")
+    print(equity.tail())
+
+    print("\nTrade Log:")
+    print(trade_log)
+
+    print("\nSummary Stats:")
+    for key, value in summary.items():
+        print(f"{key}: {value}")
+
+    export_path = config.get("export")
+    if export_path:
+        fmt = config.get("export_format", "csv").lower()
+        if fmt == "json":
+            equity.to_json(f"{export_path}_equity.json", orient="records", date_format="iso")
+            trade_log.to_json(f"{export_path}_trades.json", orient="records", date_format="iso")
+            with open(f"{export_path}_summary.json", "w", encoding="utf-8") as f:
+                json.dump(summary, f)
+        else:
+            equity.to_csv(f"{export_path}_equity.csv")
+            trade_log.to_csv(f"{export_path}_trades.csv", index=False)
+            pd.DataFrame([summary]).to_csv(f"{export_path}_summary.csv", index=False)
+
+    return {
+        "results": results,
+        "equity_curve": equity,
+        "trade_log": trade_log,
+        "summary": summary,
+    }
