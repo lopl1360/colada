@@ -29,6 +29,8 @@ except Exception:  # pragma: no cover - handled gracefully in runtime
 from llm_model.sentiment_analyzer import SentimentAnalyzer
 from models.lstm_price_predictor import LSTMPricePredictor
 from utils.feature_engineering import add_technical_indicators, merge_sentiment_features
+from execution.market_timer import should_exit_positions
+from trading_app.alpaca_client import alpaca as alpaca_api
 
 
 FeatureVector = np.ndarray
@@ -116,6 +118,10 @@ def run_trade_loop(
     iterations = 0
     while max_iterations is None or iterations < max_iterations:
         iterations += 1
+
+        if should_exit_positions(alpaca_api):
+            alpaca_api.close_all_positions()
+            break
 
         price = float(price_fetcher(symbol))
         news_text = news_fetcher(symbol)
