@@ -63,6 +63,35 @@ Invoke commands through the CLI:
 - `trading_app/ml/train_model.py` trains XGBoost classifiers and saves them to `models/`.
 - `trading_app/ml/train_lstm.py` trains sequence models for use in `trading_bot/run_trade_loop.py`.
 
+## Backtesting
+Evaluate a strategy offline with the `backtest` module:
+
+```python
+import pandas as pd
+from backtest import run_backtest
+
+# price data indexed by timestamp with OHLCV columns
+data = pd.read_csv("data.csv", index_col="timestamp", parse_dates=True)
+
+def simple_strategy(row: pd.Series) -> int:
+    return 1 if row["close"] > row["open"] else -1
+
+report = run_backtest(data, simple_strategy,
+                      config={"initial_cash": 10_000, "export": "results"})
+```
+
+`run_backtest` prints an equity curve, trade log and summary statistics. The
+returned `report` dictionary also exposes:
+
+- `results` – simulator output for each bar
+- `equity_curve` – account value over time
+- `trade_log` – each trade's entry/exit and PnL
+- `summary` – metrics such as `num_trades`, `win_rate`, `avg_win`, `avg_loss`,
+  `max_drawdown` and `sharpe_ratio`
+
+Exporting is optional; when `export` is provided CSV/JSON files with the
+equity curve, trades and metrics are written with the given prefix.
+
 ## Testing
 Run the test suite with:
 ```bash
