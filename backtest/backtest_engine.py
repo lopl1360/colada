@@ -1,4 +1,5 @@
 """Core backtesting engine."""
+
 from __future__ import annotations
 
 import json
@@ -155,8 +156,12 @@ def run_backtest(
     if export_path:
         fmt = config.get("export_format", "csv").lower()
         if fmt == "json":
-            equity.to_json(f"{export_path}_equity.json", orient="records", date_format="iso")
-            trade_log.to_json(f"{export_path}_trades.json", orient="records", date_format="iso")
+            equity.to_json(
+                f"{export_path}_equity.json", orient="records", date_format="iso"
+            )
+            trade_log.to_json(
+                f"{export_path}_trades.json", orient="records", date_format="iso"
+            )
             with open(f"{export_path}_summary.json", "w", encoding="utf-8") as f:
                 json.dump(summary, f)
         else:

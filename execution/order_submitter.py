@@ -40,8 +40,14 @@ def submit_bracket_order(symbol, qty, side, entry_price, stop_pct, target_pct):
         logger.info("Existing position for %s; skipping order", symbol)
         return None
 
-    stop_price = entry_price * (1 - stop_pct) if side == "buy" else entry_price * (1 + stop_pct)
-    target_price = entry_price * (1 + target_pct) if side == "buy" else entry_price * (1 - target_pct)
+    stop_price = (
+        entry_price * (1 - stop_pct) if side == "buy" else entry_price * (1 + stop_pct)
+    )
+    target_price = (
+        entry_price * (1 + target_pct)
+        if side == "buy"
+        else entry_price * (1 - target_pct)
+    )
 
     logger.info(
         "Submitting bracket order: symbol=%s qty=%s side=%s price=%.2f stop=%.4f target=%.4f",

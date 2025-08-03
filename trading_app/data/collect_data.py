@@ -21,13 +21,19 @@ def fetch_data(symbol):
         return
 
     # Resample to 15-min
-    df_15 = df.resample("15min").agg({
-        "open": "first",
-        "high": "max",
-        "low": "min",
-        "close": "last",
-        "volume": "sum"
-    }).dropna()
+    df_15 = (
+        df.resample("15min")
+        .agg(
+            {
+                "open": "first",
+                "high": "max",
+                "low": "min",
+                "close": "last",
+                "volume": "sum",
+            }
+        )
+        .dropna()
+    )
 
     # Add common technical indicators
     df_15 = TACalculator.add_indicators(df_15)
@@ -35,6 +41,7 @@ def fetch_data(symbol):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     df_15.to_csv(f"{OUTPUT_DIR}/{symbol}_15min.csv")
     print(f"[Saved] {symbol} → {OUTPUT_DIR}/{symbol}_15min.csv")
+
 
 def fetch_all():
     for symbol in SYMBOLS:

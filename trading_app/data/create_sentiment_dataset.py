@@ -1,4 +1,5 @@
 """Utility for building a sentiment-augmented dataset."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -15,13 +16,15 @@ def fetch_ohlcv(symbol: str, days: int = 30) -> pd.DataFrame:
     if df.empty:
         raise ValueError("No price data returned")
     df.index = pd.to_datetime(df.index)
-    df = df.rename(columns={
-        "Open": "open",
-        "High": "high",
-        "Low": "low",
-        "Close": "close",
-        "Volume": "volume",
-    })
+    df = df.rename(
+        columns={
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Volume": "volume",
+        }
+    )
     return df[["open", "high", "low", "close", "volume"]]
 
 
@@ -51,7 +54,9 @@ def fetch_news_sentiment(symbol: str) -> pd.Series:
     return df["sentiment"]
 
 
-def build_dataset(symbol: str, window: int = 60, output_csv: str | None = None) -> pd.DataFrame:
+def build_dataset(
+    symbol: str, window: int = 60, output_csv: str | None = None
+) -> pd.DataFrame:
     """Create dataset with technical indicators and sentiment scores."""
     price = fetch_ohlcv(symbol)
     price = TACalculator.add_indicators(price)
@@ -75,7 +80,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create sentiment dataset")
     parser.add_argument("symbol", help="Ticker symbol, e.g. AAPL")
     parser.add_argument("--window", type=int, default=60, help="Rolling window size")
-    parser.add_argument("--output", default="sentiment_dataset.csv", help="CSV file path")
+    parser.add_argument(
+        "--output", default="sentiment_dataset.csv", help="CSV file path"
+    )
     args = parser.parse_args()
 
     df = build_dataset(args.symbol, window=args.window, output_csv=args.output)

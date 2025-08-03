@@ -9,6 +9,7 @@ INPUT_DIR = "features"
 OUTPUT_DIR = "models"
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 
+
 def train_model_for_symbol(symbol):
     file_path = os.path.join(INPUT_DIR, f"features_{symbol}.csv")
     if not os.path.exists(file_path):
@@ -40,9 +41,11 @@ def train_model_for_symbol(symbol):
     dump(model, os.path.join(OUTPUT_DIR, f"model_{symbol}.pkl"))
     print(f"Saved model to {OUTPUT_DIR}/model_{symbol}.pkl")
 
+
 def train_all():
     for symbol in SYMBOLS:
         train_model_for_symbol(symbol)
+
 
 if __name__ == "__main__":
     train_all()
