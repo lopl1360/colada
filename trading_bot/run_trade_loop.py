@@ -20,6 +20,8 @@ from typing import Callable, Deque, Optional
 
 import logging
 
+from monitoring.logger import setup_logger
+
 import numpy as np
 import pandas as pd
 
@@ -40,6 +42,7 @@ from trading_app.alpaca_client import alpaca as alpaca_api
 FeatureVector = np.ndarray
 
 
+setup_logger()
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +51,8 @@ def _fetch_equity() -> float:
     try:  # pragma: no cover - requires network in real use
         account = order_submitter.alpaca.get_account()
         return float(getattr(account, "equity", 0.0))
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to fetch equity: %s", exc)
         return 0.0
 
 
@@ -59,8 +63,9 @@ def _default_price_fetcher(symbol: str) -> float:
 
         price = get_latest_price(symbol)
         return float(price) if price is not None else float("nan")
-    except Exception:
+    except Exception as exc:
         # In offline environments or if Alpaca is not configured, fall back to NaN
+        logger.error("Error fetching price for %s: %s", symbol, exc)
         return float("nan")
 
 
@@ -73,8 +78,8 @@ def _default_news_fetcher(symbol: str) -> str:
         if news_items:
             item = news_items[0]
             return f"{item.get('title', '')} {item.get('summary', '')}".strip()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.error("Error fetching news for %s: %s", symbol, exc)
     return ""  # no news available
 
 
@@ -137,15 +142,33 @@ def run_trade_loop(
         iterations += 1
 
         if should_exit_positions(alpaca_api):
-            alpaca_api.close_all_positions()
+            try:
+                positions = alpaca_api.list_positions()
+                for pos in positions:
+                    logger.info(
+                        "Closing position %s qty=%s profit=%s",
+                        getattr(pos, "symbol", ""),
+                        getattr(pos, "qty", ""),
+                        getattr(pos, "unrealized_pl", ""),
+                    )
+                alpaca_api.close_all_positions()
+            except Exception as exc:  # pragma: no cover - relies on external API
+                logger.error("Error closing positions: %s", exc)
             break
 
         price = float(price_fetcher(symbol))
         news_text = news_fetcher(symbol)
         sentiment_score = float(sentiment_model.get_sentiment_score(news_text))
 
+        timestamp = pd.Timestamp.utcnow()
+        logger.info(
+            "New bar for %s: time=%s price=%.2f",
+            symbol,
+            timestamp.isoformat(),
+            price,
+        )
         # Update price history
-        price_history.loc[pd.Timestamp.utcnow(), "close"] = price
+        price_history.loc[timestamp, "close"] = price
 
         # Build feature set with technical indicators and sentiment
         features_df = add_technical_indicators(price_history)
@@ -181,10 +204,12 @@ def run_trade_loop(
                 prediction = model(x).item()
             action = _decide_action(prediction, threshold=signal_threshold)
             logger.info(
-                "%s price=%.2f pred=%.4f action=%s",
+                "Decision for %s: price=%.2f pred=%.4f conf=%.4f sentiment=%.4f action=%s",
                 symbol,
                 price,
                 prediction,
+                abs(prediction),
+                sentiment_score,
                 action,
             )
             if (
@@ -196,7 +221,8 @@ def run_trade_loop(
                     stop_pct, target_pct = volatility_manager.compute_stop_target(
                         price_history["close"]
                     )
-                except Exception:  # pragma: no cover - rely on best effort
+                except Exception as exc:  # pragma: no cover - rely on best effort
+                    logger.error("Failed to compute stop/target: %s", exc)
                     stop_pct, target_pct = 0.0, 0.0
                 equity = _fetch_equity()
                 qty = position_sizer.calculate_position_size(equity, stop_pct, price)
@@ -205,15 +231,14 @@ def run_trade_loop(
                     order_submitter.submit_bracket_order(
                         symbol, qty, side, price, stop_pct, target_pct
                     )
-                logger.info(
-                    "%s price=%.2f qty=%s signal=%.4f stop=%.4f target=%.4f",
-                    symbol,
-                    price,
-                    qty,
-                    prediction,
-                    stop_pct,
-                    target_pct,
-                )
+                    logger.info(
+                        "Order submitted: symbol=%s qty=%s price=%.2f stop=%.4f target=%.4f",
+                        symbol,
+                        qty,
+                        price,
+                        stop_pct,
+                        target_pct,
+                    )
         else:
             remaining = seq_len - len(feature_window)
             logger.info("Collecting data... %d minutes remaining", remaining)
