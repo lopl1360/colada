@@ -1,6 +1,6 @@
 """Backtesting module scaffolding."""
 
-from .backtest_engine import BacktestEngine
+from .backtest_engine import BacktestEngine, run_backtest
 from .trade_simulator import TradeSimulator
 from .metrics import (
     calculate_metrics,
@@ -11,6 +11,7 @@ from .metrics import (
 
 __all__ = [
     "BacktestEngine",
+    "run_backtest",
     "TradeSimulator",
     "calculate_metrics",
     "plot_performance",
