@@ -186,6 +186,14 @@ def train_model():
 
 
 @cli.command()
+def train_lstm():
+    """Train LSTM models for all available symbols."""
+    from trading_app.ml.train_lstm import train_all
+
+    train_all()
+
+
+@cli.command()
 @click.argument("symbol")
 def predict_symbol(symbol):
     """Predict if the given symbol will go UP or DOWN using the latest model."""
