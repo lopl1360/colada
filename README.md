@@ -16,15 +16,26 @@ Colada is a Python-based trading toolkit that integrates real-time market data, 
 - `trading_bot/` – example LSTM trading loop using sentiment and technical features.
 
 ## Setup
-1. Install dependencies:
+1. Ensure Python 3.11 is compiled with SQLite support:
    ```bash
-   pip install -r requirements.txt
+   sudo apt install -y libsqlite3-dev
+   # If Python 3.11 was built before installing these headers, rebuild it
+   cd /usr/src/Python-3.11.9
+   sudo make clean
+   sudo ./configure --enable-optimizations
+   sudo make -j$(nproc)
+   sudo make altinstall
    ```
-2. Configure environment variables for external services:
+2. Install dependencies using a custom temporary directory to avoid `/tmp` disk space issues:
+   ```bash
+   mkdir -p ~/tmp
+   TMPDIR=~/tmp pip install -r requirements.txt
+   ```
+3. Configure environment variables for external services:
    - `ALPACA_API_KEY` / `ALPACA_SECRET_KEY`
    - `FINNHUB_API_KEY`
    - `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`
-3. Optionally start the MySQL database and bot via Docker:
+4. Optionally start the MySQL database and bot via Docker:
     ```bash
     make build
     make up
@@ -32,11 +43,14 @@ Colada is a Python-based trading toolkit that integrates real-time market data, 
 
 ### DigitalOcean droplet preparation
 
-On a fresh droplet you can install Python 3.11, create the virtual environment and install project dependencies with:
+On a fresh droplet you can install Python 3.11 (with SQLite support), create the virtual environment and install project dependencies with:
 
 ```bash
 make prepare
 ```
+
+This script installs the SQLite development headers and uses a dedicated temporary
+directory during `pip install` to avoid `No space left on device` errors on small droplets.
 
 To run commands inside this environment use:
 
