@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from trading_app.indicators import TACalculator
 
@@ -7,10 +8,13 @@ OUTPUT_DIR = "features"
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 
 
+logger = logging.getLogger(__name__)
+
+
 def prepare_features(symbol):
     path = os.path.join(INPUT_DIR, f"{symbol}_15min.csv")
     if not os.path.exists(path):
-        print(f"Missing CSV for {symbol}, skipping.")
+        logger.warning("Missing CSV for %s, skipping.", symbol)
         return
 
     df = pd.read_csv(path, index_col=0, parse_dates=True)
@@ -35,7 +39,7 @@ def prepare_features(symbol):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     out_path = os.path.join(OUTPUT_DIR, f"features_{symbol}.csv")
     df.to_csv(out_path)
-    print(f"[Saved] {symbol} → {out_path}")
+    logger.info("[Saved] %s → %s", symbol, out_path)
 
 
 def prepare_all():

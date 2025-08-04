@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
@@ -10,10 +11,13 @@ OUTPUT_DIR = "models"
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 
 
+logger = logging.getLogger(__name__)
+
+
 def train_model_for_symbol(symbol):
     file_path = os.path.join(INPUT_DIR, f"features_{symbol}.csv")
     if not os.path.exists(file_path):
-        print(f"Missing features for {symbol}, skipping.")
+        logger.warning("Missing features for %s, skipping.", symbol)
         return
 
     df = pd.read_csv(file_path)
@@ -30,16 +34,16 @@ def train_model_for_symbol(symbol):
 
     y_pred = model.predict(X_test)
 
-    print(f"--- {symbol} ---")
-    print("Accuracy:", accuracy_score(y_test, y_pred))
-    print("Precision:", precision_score(y_test, y_pred))
-    print("Recall:", recall_score(y_test, y_pred))
-    print("F1 Score:", f1_score(y_test, y_pred))
-    print()
+    logger.info("--- %s ---", symbol)
+    logger.info("Accuracy: %s", accuracy_score(y_test, y_pred))
+    logger.info("Precision: %s", precision_score(y_test, y_pred))
+    logger.info("Recall: %s", recall_score(y_test, y_pred))
+    logger.info("F1 Score: %s", f1_score(y_test, y_pred))
+    logger.info("")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     dump(model, os.path.join(OUTPUT_DIR, f"model_{symbol}.pkl"))
-    print(f"Saved model to {OUTPUT_DIR}/model_{symbol}.pkl")
+    logger.info("Saved model to %s/model_%s.pkl", OUTPUT_DIR, symbol)
 
 
 def train_all():

@@ -1,7 +1,11 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import logging
 from .config import FINNHUB_API_KEY
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_finnhub_quote(symbol):
@@ -32,7 +36,7 @@ def get_finnhub_bars(symbol, resolution=60, count=24):
     data = response.json()
 
     if data.get("s") != "ok":
-        print(f"[Finnhub Error] {data}")
+        logger.error("[Finnhub Error] %s", data)
         return None
 
     df = pd.DataFrame(
