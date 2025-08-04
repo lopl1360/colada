@@ -12,6 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def fetch_ohlcv(symbol: str, days: int = 30) -> pd.DataFrame:
     """Download 1-min OHLCV data using yfinance."""
     df = yf.download(symbol, period=f"{days}d", interval="1m", progress=False)

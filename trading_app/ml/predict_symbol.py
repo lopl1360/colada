@@ -1,5 +1,4 @@
 import os
-import os
 import logging
 from joblib import load
 from trading_app.finnhub_client import get_finnhub_bars
