@@ -1,6 +1,9 @@
 import logging
 import os
 from alpaca_trade_api.rest import REST, APIError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_KEY = os.getenv("ALPACA_API_KEY", "DUMMY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "DUMMY")
