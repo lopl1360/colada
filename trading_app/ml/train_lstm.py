@@ -1,4 +1,5 @@
 import os
+import logging
 
 from models.lstm_price_predictor import train_lstm
 
@@ -6,13 +7,16 @@ INPUT_DIR = "features_1min"
 SYMBOLS = ["AAPL", "GOOG", "MSFT"]
 
 
+logger = logging.getLogger(__name__)
+
+
 def train_all():
     for symbol in SYMBOLS:
         path = os.path.join(INPUT_DIR, f"{symbol}.csv")
         if not os.path.exists(path):
-            print(f"Missing data for {symbol}, skipping.")
+            logger.warning("Missing data for %s, skipping.", symbol)
             continue
-        print(f"Training LSTM for {symbol} from {path}")
+        logger.info("Training LSTM for %s from %s", symbol, path)
         train_lstm(
             path,
             seq_len=60,

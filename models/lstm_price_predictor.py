@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import logging
 import numpy as np
 import pandas as pd
 
@@ -12,6 +13,7 @@ except ImportError:  # pragma: no cover - torch may not be installed
     nn = None  # type: ignore
     Dataset = object  # type: ignore
     DataLoader = object  # type: ignore
+logger = logging.getLogger(__name__)
 
 
 class LSTMPricePredictor(nn.Module):
@@ -117,10 +119,10 @@ def train_lstm(
             optimizer.step()
             epoch_loss += loss.item() * X_batch.size(0)
         avg_loss = epoch_loss / len(dataset)
-        print(f"Epoch {epoch+1}/{num_epochs} - Loss: {avg_loss:.4f}")
+        logger.info("Epoch %s/%s - Loss: %.4f", epoch + 1, num_epochs, avg_loss)
 
     torch.save(model.state_dict(), model_path)
-    print(f"Saved model to {model_path}")
+    logger.info("Saved model to %s", model_path)
     return model
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Callable, Sequence
+import logging
 
 import pandas as pd
 
@@ -15,6 +16,9 @@ from .metrics import (
     track_equity,
     equity_curve_dataframe,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestEngine:
@@ -142,15 +146,13 @@ def run_backtest(
     trade_log = pd.DataFrame(_trade_log)
     summary = engine.metrics or calculate_metrics()
 
-    print("Equity Curve:")
-    print(equity.tail())
+    logger.info("Equity Curve:\n%s", equity.tail())
 
-    print("\nTrade Log:")
-    print(trade_log)
+    logger.info("\nTrade Log:\n%s", trade_log)
 
-    print("\nSummary Stats:")
+    logger.info("\nSummary Stats:")
     for key, value in summary.items():
-        print(f"{key}: {value}")
+        logger.info("%s: %s", key, value)
 
     export_path = config.get("export")
     if export_path:

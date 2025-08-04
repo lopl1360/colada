@@ -8,7 +8,9 @@ import yfinance as yf
 from llm_model.sentiment_analyzer import SentimentAnalyzer
 from trading_app.indicators import TACalculator
 from utils.feature_engineering import merge_sentiment_features
+import logging
 
+logger = logging.getLogger(__name__)
 
 def fetch_ohlcv(symbol: str, days: int = 30) -> pd.DataFrame:
     """Download 1-min OHLCV data using yfinance."""
@@ -86,4 +88,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df = build_dataset(args.symbol, window=args.window, output_csv=args.output)
-    print(f"Saved {len(df)} rows to {args.output}")
+    logger.info("Saved %s rows to %s", len(df), args.output)

@@ -1,13 +1,17 @@
 import os
+import os
+import logging
 from joblib import load
 from trading_app.finnhub_client import get_finnhub_bars
 from trading_app.indicators import TACalculator
+
+logger = logging.getLogger(__name__)
 
 
 def load_model(symbol):
     model_path = f"models/model_{symbol}.pkl"
     if not os.path.exists(model_path):
-        print(f"Model for {symbol} not found.")
+        logger.warning("Model for %s not found.", symbol)
         return None
     return load(model_path)
 
@@ -15,7 +19,7 @@ def load_model(symbol):
 def prepare_latest_features(symbol):
     df = get_finnhub_bars(symbol)
     if df is None or df.empty:
-        print(f"No data for {symbol}")
+        logger.warning("No data for %s", symbol)
         return None
 
     df = TACalculator.add_indicators(df)
@@ -26,7 +30,7 @@ def prepare_latest_features(symbol):
 
     df = df.dropna()
     if df.empty:
-        print("Insufficient data to generate features.")
+        logger.warning("Insufficient data to generate features.")
         return None
 
     latest_row = df.iloc[-1]
@@ -44,6 +48,9 @@ def predict_symbol(symbol):
 
     prediction = model.predict(features)[0]
     prob = model.predict_proba(features)[0][1]
-    print(
-        f"Prediction for {symbol}: {'UP' if prediction == 1 else 'DOWN'} (Confidence: {prob:.2f})"
+    logger.info(
+        "Prediction for %s: %s (Confidence: %.2f)",
+        symbol,
+        "UP" if prediction == 1 else "DOWN",
+        prob,
     )
