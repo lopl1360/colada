@@ -4,8 +4,11 @@ import logging
 import os
 
 from alpaca_trade_api.rest import REST
+from dotenv import load_dotenv
 
 from . import position_manager
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
