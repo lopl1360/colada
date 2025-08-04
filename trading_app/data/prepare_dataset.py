@@ -2,10 +2,11 @@ import os
 import logging
 import pandas as pd
 from trading_app.indicators import TACalculator
+from trading_app.symbols import load_symbols
 
 INPUT_DIR = "data"
 OUTPUT_DIR = "features"
-SYMBOLS = ["AAPL", "GOOG", "MSFT"]
+SYMBOLS = load_symbols()
 
 
 logger = logging.getLogger(__name__)

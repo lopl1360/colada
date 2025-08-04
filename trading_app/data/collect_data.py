@@ -2,9 +2,10 @@ from datetime import datetime, timedelta
 import os
 from trading_app.alpaca_client import get_historical_data
 from trading_app.indicators import TACalculator
+from trading_app.symbols import load_symbols
 import logging
 
-SYMBOLS = ["AAPL", "GOOG", "MSFT"]
+SYMBOLS = load_symbols()
 OUTPUT_DIR = "data"
 DAYS = 30
 
