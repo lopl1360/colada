@@ -113,9 +113,10 @@ Invoke commands through the CLI:
   python cli.py collect_data
   python cli.py prepare_dataset
   ```
-- Train a model and predict a symbol:
+- Train models and predict a symbol:
   ```bash
   python cli.py train_model
+  python cli.py train_lstm
   python cli.py predict_symbol AAPL
   ```
 - Run scheduled tasks:
