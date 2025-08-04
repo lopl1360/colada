@@ -2,9 +2,10 @@ import os
 import logging
 
 from models.lstm_price_predictor import train_lstm
+from trading_app.symbols import load_symbols
 
 INPUT_DIR = "features_1min"
-SYMBOLS = ["AAPL", "GOOG", "MSFT"]
+SYMBOLS = load_symbols()
 
 
 logger = logging.getLogger(__name__)

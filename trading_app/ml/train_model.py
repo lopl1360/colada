@@ -5,10 +5,11 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from joblib import dump
+from trading_app.symbols import load_symbols
 
 INPUT_DIR = "features"
 OUTPUT_DIR = "models"
-SYMBOLS = ["AAPL", "GOOG", "MSFT"]
+SYMBOLS = load_symbols()
 
 
 logger = logging.getLogger(__name__)
