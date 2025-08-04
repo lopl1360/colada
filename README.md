@@ -60,6 +60,43 @@ make venv CMD="python cli.py alpaca AAPL"
 
 Replace the command passed to `CMD` to run any script; use `bash` to drop into an interactive shell.
 
+### Install and configure MySQL on a DigitalOcean droplet
+
+To install and secure MySQL for the trading bot on a fresh Ubuntu droplet:
+
+1. Update the package index:
+   ```bash
+   sudo apt update
+   ```
+2. Install the MySQL server and client packages:
+   ```bash
+   sudo apt install mysql-server mysql-client -y
+   ```
+3. Start the service and enable it at boot:
+   ```bash
+   sudo systemctl start mysql
+   sudo systemctl enable mysql
+   ```
+4. Run the security script and follow the prompts to set a root password, remove anonymous users, disallow remote root login, remove the test database, and reload the privilege tables:
+   ```bash
+   sudo mysql_secure_installation
+   ```
+5. Create the database and user for the bot:
+   ```bash
+   sudo mysql -u root -p
+   ```
+   ```sql
+   CREATE DATABASE trading_bot;
+   CREATE USER 'trader'@'localhost' IDENTIFIED BY 'your_secure_password';
+   GRANT ALL PRIVILEGES ON trading_bot.* TO 'trader'@'localhost';
+   FLUSH PRIVILEGES;
+   EXIT;
+   ```
+6. Configure the app to use the database, for example with an environment variable:
+   ```bash
+   DB_URL=mysql+pymysql://trader:your_secure_password@localhost/trading_bot
+   ```
+
 ## Usage
 Invoke commands through the CLI:
 
